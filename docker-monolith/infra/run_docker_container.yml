@@ -1,0 +1,25 @@
+---
+- name: Run docker container
+  hosts: all
+  become: true
+  tasks:
+    - name: State Docker daemon
+      service:
+        name: docker
+        state: started
+
+    - name: Pull image
+      docker_image:
+        name: pavelvizir/otus-reddit
+        tag: 1.0
+        state: present
+
+    - name: Run container
+      docker_container:
+        name: reddit
+        image: pavelvizir/otus-reddit:1.0
+        detach: yes
+        network_mode: host
+        ports:
+          - "9292:9292"
+        state: started
