@@ -4,6 +4,7 @@ pavelvizir microservices repository
 # Table of contents:  
 - [Homework-12 aka 'docker-1'](#homework-12-aka-docker-1)  
 - [Homework-13 aka 'docker-2'](#homework-13-aka-docker-2)  
+- [Homework-14 aka 'docker-3'](#homework-14-aka-docker-3)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -95,4 +96,62 @@ echo '*.tfstate
 __pycache__
 secrets.py'\
 >> ../../.gitignore
+```
+
+## Homework-14 aka 'docker-3'  
+### Task \#1:  
+#### Practice with docker, docker build, hadolint, bridge-network for containers.  
+> Add ignores to hadolint.
+```sh
+echo 'ignore:
+  - DL3008' \
+> .hadolint.yaml
+```
+
+### Task \#2\*:  
+#### Rerun containers with different nework aliases.  
+ 
+```sh
+docker run -d --network=reddit --network-alias=post_db_2 --network-alias=comment_db_2 mongo:latest
+docker run -d --network=reddit --network-alias=post_2 --env POST_DATABASE_HOST=post_db_2 pavelvizir/post:1.0
+docker run -d --network=reddit --network-alias=comment_2 --env COMMENT_DATABASE_HOST=comment_db_2 pavelvizir/comment:1.0
+docker run -d --network=reddit -p 9292:9292 --env POST_SERVICE_HOST=post_2 --env COMMENT_SERVICE_HOST=comment_2 pavelvizir/ui:1.0
+```
+
+### Task \#3\*:  
+#### Make images smaller.  
+> Use alpine etc.  
+
+Well, pretty obvious:  
+ * use smaller base image
+ * clean caches
+ * remove build tools afterwards
+ * play with order of steps if build speed not important
+
+```yaml
+FROM alpine:3.7
+ENV APP_HOME /app
+RUN mkdir $APP_HOME
+WORKDIR $APP_HOME
+COPY Gemfile* $APP_HOME/
+RUN apk --update add --no-cache \
+    ruby \
+    ruby-dev \
+    ruby-bundler \
+    build-base \
+    && bundle install \
+    && apk del \
+    ruby-bundler \
+    build-base \
+    ruby-dev \
+    && rm -rf /var/cache/apk
+
+COPY . $APP_HOME
+
+ENV POST_SERVICE_HOST post
+ENV POST_SERVICE_PORT 5000
+ENV COMMENT_SERVICE_HOST comment
+ENV COMMENT_SERVICE_PORT 9292
+
+CMD ["puma"]
 ```
