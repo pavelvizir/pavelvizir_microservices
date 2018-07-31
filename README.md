@@ -128,6 +128,12 @@ Well, pretty obvious:
  * remove build tools afterwards
  * play with order of steps if build speed not important
 
+Made following images smaller:
+ - comment
+ - ui
+ - mongo
+
+Example *(ui)*:
 ```yaml
 FROM alpine:3.7
 ENV APP_HOME /app
@@ -154,4 +160,24 @@ ENV COMMENT_SERVICE_HOST comment
 ENV COMMENT_SERVICE_PORT 9292
 
 CMD ["puma"]
+```
+
+Final docker images creation, containers run and test looks like that:
+```sh
+export GOOGLE_PROJECT=<project name>
+docker-machine create --driver google \
+ --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+ --google-machine-type n1-standard-1 \
+ --google-zone europe-west1-b \
+ docker-host
+eval $(docker-machine env docker-host)
+docker network create reddit
+docker volume create reddit_db
+docker build -t pavelvizir/post:1.0 ./post-py
+docker build -t pavelvizir/comment:3.0 -f comment/Dockerfile.3 ./comment
+docker build -t pavelvizir/ui:4.0 -f ui/Dockerfile.3 ./ui
+docker run -d --network=reddit --network-alias=post_db --network-alias=comment_db -v reddit_db:/data/db mvertes/alpine-mongo:latest
+docker run -d --network=reddit --network-alias=post pavelvizir/post:1.0
+docker run -d --network=reddit --network-alias=comment pavelvizir/comment:3.0
+docker run -d --network=reddit -p 9292:9292 pavelvizir/ui:4.0
 ```
