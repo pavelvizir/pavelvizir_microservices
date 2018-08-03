@@ -5,6 +5,7 @@ pavelvizir microservices repository
 - [Homework-12 aka 'docker-1'](#homework-12-aka-docker-1)  
 - [Homework-13 aka 'docker-2'](#homework-13-aka-docker-2)  
 - [Homework-14 aka 'docker-3'](#homework-14-aka-docker-3)  
+- [Homework-15 aka 'docker-4'](#homework-15-aka-docker-4)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -180,4 +181,109 @@ docker run -d --network=reddit --network-alias=post_db --network-alias=comment_d
 docker run -d --network=reddit --network-alias=post pavelvizir/post:1.0
 docker run -d --network=reddit --network-alias=comment pavelvizir/comment:3.0
 docker run -d --network=reddit -p 9292:9292 pavelvizir/ui:4.0
+```
+
+## Homework-15 aka 'docker-4'  
+### Task \#1:  
+#### Why multiple nginx containers with host network doesn't work?  
+
+Answer is: they try to bind to the same port.  
+
+```sh
+for i in $(seq 1 4); do docker run --network host -d nginx; done
+docker ps | wc -l
+> 2
+docker logs $(docker ps -aq| tail -2 | head -1)
+> nginx: [emerg] bind() to 0.0.0.0:80 failed (98: Address already in use)
+> 2018/08/03 11:30:41 [emerg] 1#1: bind() to 0.0.0.0:80 failed (98: Address already in use)
+```
+
+### Task \#2:  
+#### Docker-compose: add multiple *networks*, parametrize *ui port* and *service versions*, create *.env* file.
+
+```yaml
+version: '3.3'
+services:
+  post_db:
+    image: mvertes/alpine-mongo:${post_db_version}
+    volumes:
+      - post_db:/data/db
+    networks:
+      - back_net
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.3
+    image: ${USERNAME}/ui:${ui_version}
+    ports:
+      - ${ui_port}:${ui_port}/tcp
+    networks:
+      - front_net
+  post:
+    build: ./post-py
+    image: ${USERNAME}/post:${post_version}
+    networks:
+      - front_net
+      - back_net
+  comment:
+    build:
+      context: ./comment
+      dockerfile: Dockerfile.3
+    image: ${USERNAME}/comment:${comment_version}
+    networks:
+      - front_net
+      - back_net
+
+volumes:
+  post_db:
+
+networks:
+  front_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.1.0/24
+  back_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.2.0/24
+```
+ 
+```sh
+echo '.env' >> ../.gitignore
+```
+### Task \#3:  
+#### Docker-compose: how to determine project name, how to set it.  
+
+>  -p, --project-name NAME     Specify an alternate project name  
+>                              (default: directory name)   
+
+### Task \#4\*:  
+#### Docker-compose: override app's scripts, override puma start with flags "--debug" and "-w 2".  
+
+> Using 2 ways to do it. Second IMO is better in most cases:  
+>  1. mount over existing file  
+>  2. mount to another dir and copy **if source exists**   
+
+```yaml
+version: '3.3'
+services:
+  ui:
+    # docker-machine scp ui/ui_app.rb docker-host:/home/docker-user/
+    volumes:
+      - /home/docker-user/ui_app.rb:/app/ui_app.rb 
+    command: ["puma", "--debug", "-w", "2"] 
+  post:
+    # this way is better, as you don't have to place file in place
+    volumes:
+      - /home/docker-user/post:/post
+    entrypoint: sh -c "[ -f /post/post_app.py ] && cp /post/post_app.py /app/; exec python3 post_app.py"
+  comment:
+    # docker-machine scp comment/comment_app.rb docker-host:/home/docker-user/      
+    volumes:
+      - /home/docker-user/comment_app.rb:/app/comment_app.rb 
+    command: ["puma", "--debug", "-w", "2"] 
 ```

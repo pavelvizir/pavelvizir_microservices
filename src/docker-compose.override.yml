@@ -1,0 +1,18 @@
+version: '3.3'
+services:
+  ui:
+    # docker-machine scp ui/ui_app.rb docker-host:/home/docker-user/
+    volumes:
+      - /home/docker-user/ui_app.rb:/app/ui_app.rb 
+    command: ["puma", "--debug", "-w", "2"] 
+  post:
+    # this way is better, as you don't have to place file in place
+    volumes:
+      - /home/docker-user/post:/post
+    entrypoint: sh -c "[ -f /post/post_app.py ] && cp /post/post_app.py /app/; exec python3 post_app.py"
+  comment:
+    # docker-machine scp comment/comment_app.rb docker-host:/home/docker-user/      
+    volumes:
+      - /home/docker-user/comment_app.rb:/app/comment_app.rb 
+    command: ["puma", "--debug", "-w", "2"] 
+
