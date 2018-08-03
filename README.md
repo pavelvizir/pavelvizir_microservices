@@ -1,6 +1,8 @@
 # pavelvizir_microservices  
 pavelvizir microservices repository  
 
+[![Build Status](https://travis-ci.com/Otus-DevOps-2018-05/pavelvizir_microservices.svg?branch=master)](https://travis-ci.com/Otus-DevOps-2018-05/pavelvizir_microservices)
+
 # Table of contents:  
 - [Homework-12 aka 'docker-1'](#homework-12-aka-docker-1)  
 - [Homework-13 aka 'docker-2'](#homework-13-aka-docker-2)  
