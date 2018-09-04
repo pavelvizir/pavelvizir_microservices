@@ -5,3 +5,4 @@
 *.retry
 __pycache__
 secrets.py
+.env
