@@ -1,0 +1,56 @@
+---
+- name: register gitlab-ci address
+  hosts: localhost
+  tasks:
+    - shell: terraform output gitlab-ci-host_external_ip
+      register: shell_output
+
+    - debug:
+        msg: "{{ shell_output.stdout }}"
+
+- name: Start gitlab-ci runner(s)
+  hosts: all
+  become: true
+  vars:
+    runner_name: "gitlab-runner{{ runner_suffix | default('') }}"
+    runner_token: "{{ runner_token }}"
+
+  tasks:
+    - debug:
+        msg: "runner_token is required"
+      failed_when: runner_token is not defined
+
+    - name: make sure docker is started
+      service:
+        name: docker
+        state: started
+
+    - name: create config dir just in case
+      file:
+        state: directory
+        path: '/srv/{{ runner_name }}'
+
+    - name: start runner
+      docker_container:
+        name: "{{ runner_name }}"
+        image: "gitlab/gitlab-runner:latest"
+        volumes:
+          - "/srv/{{ runner_name }}/config:/etc/gitlab-runner"
+          - "/var/run/docker.sock:/var/run/docker.sock"
+        state: started
+        restart: yes
+        restart_policy: always
+      tags: run
+
+    - name: register runner
+      raw: >
+        docker exec -it {{ runner_name }} gitlab-runner register \
+        --non-interactive \
+        --executor "docker" \
+        --docker-image alpine:latest \
+        --url "http://{{ hostvars['localhost']['shell_output']['stdout'] }}/" \
+        --registration-token "{{ runner_token }}" \
+        --description "{{ runner_name }}" \
+        --tag-list "linux,xenial,ubuntu,docker" \
+        --run-untagged \
+        --locked="false"
