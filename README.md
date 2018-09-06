@@ -8,6 +8,7 @@ pavelvizir microservices repository
 - [Homework-13 aka 'docker-2'](#homework-13-aka-docker-2)  
 - [Homework-14 aka 'docker-3'](#homework-14-aka-docker-3)  
 - [Homework-15 aka 'docker-4'](#homework-15-aka-docker-4)  
+- [Homework-16 aka 'gitlab-ci-1'](#homework-16-aka-gitlab-ci-1)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -289,3 +290,91 @@ services:
       - /home/docker-user/comment_app.rb:/app/comment_app.rb 
     command: ["puma", "--debug", "-w", "2"] 
 ```
+
+## Homework-16 aka 'gitlab-ci-1'  
+### Task \#1:  
+#### Create gitlab-ci host with omnibus.  
+
+Standard way with `terraform` and `ansible`:  
+[repo/gitlab-ci/deploy](https://github.com/Otus-DevOps-2018-05/pavelvizir_microservices/tree/gitlab-ci-1/gitlab-ci/deploy)  
+
+```sh
+cd gitlab-ci/deploy
+terraform apply -var project="docker-xxxxxx"
+ansible-playbook gitlab-ci.yml
+```
+
+If you stop and start again VM:  
+```sh
+terraform refresh -var project="docker-xxxxxx"
+ansible-playbook start_gitlab-ci.yml
+```
+
+### Task \#2\*:  
+#### Create runner install automation.
+
+```yaml
+---
+- name: register gitlab-ci address
+  hosts: localhost
+  tasks:
+    - shell: terraform output gitlab-ci-host_external_ip
+      register: shell_output
+
+    - debug:
+        msg: "{{ shell_output.stdout }}"
+
+- name: Start gitlab-ci runner(s)
+  hosts: all
+  become: true
+  vars:
+    runner_name: "gitlab-runner{{ runner_suffix | default('') }}"
+    runner_token: "{{ runner_token }}"
+
+  tasks:
+    - debug:
+        msg: "runner_token is required"
+      failed_when: runner_token is not defined
+
+    - name: make sure docker is started
+      service:
+        name: docker
+        state: started
+
+    - name: create config dir just in case
+      file:
+        state: directory
+        path: '/srv/{{ runner_name }}'
+
+    - name: start runner
+      docker_container:
+        name: "{{ runner_name }}"
+        image: "gitlab/gitlab-runner:latest"
+        volumes:
+          - "/srv/{{ runner_name }}/config:/etc/gitlab-runner"
+          - "/var/run/docker.sock:/var/run/docker.sock"
+        state: started
+        restart: yes
+        restart_policy: always
+      tags: run
+
+    - name: register runner
+      raw: >
+        docker exec -it {{ runner_name }} gitlab-runner register \
+        --non-interactive \
+        --executor "docker" \
+        --docker-image alpine:latest \
+        --url "http://{{ hostvars['localhost']['shell_output']['stdout'] }}/" \
+        --registration-token "{{ runner_token }}" \
+        --description "{{ runner_name }}" \
+        --tag-list "linux,xenial,ubuntu,docker" \
+        --run-untagged \
+        --locked="false"
+```
+
+### Task \#3\*:  
+#### Create gitlab-ci slack integration.  
+
+*Gitlab-ci* project settings -> integrations -> slack notifications -> active, add webhook url, process to slack webhook link, test results  
+*Slack* Enable webhook, enjoy integration  
+
