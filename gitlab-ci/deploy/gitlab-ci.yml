@@ -2,3 +2,4 @@
 - import_playbook: base.yml
 - import_playbook: install_docker.yml
 - import_playbook: start_gitlab-ci.yml
+- import_playbook: start_server_spawn_host.yml

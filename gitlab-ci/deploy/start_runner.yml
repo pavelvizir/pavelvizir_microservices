@@ -9,7 +9,7 @@
         msg: "{{ shell_output.stdout }}"
 
 - name: Start gitlab-ci runner(s)
-  hosts: all
+  hosts: tag_gitlab-ci-host
   become: true
   vars:
     runner_name: "gitlab-runner{{ runner_suffix | default('') }}"
