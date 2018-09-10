@@ -1,0 +1,12 @@
+[Unit]
+Description=server-spawn-service
+
+[Service]
+WorkingDirectory=/srv/server-spawn
+ExecStart=/usr/bin/python service.py
+Restart=always
+RestartSec=10
+SyslogIdentifier=server-spawn-service
+
+[Install]
+WantedBy=default.target

@@ -8,7 +8,7 @@
     - debug:
         msg: "{{ shell_output.stdout }}"
 
-- name: Start gitlab-ci runner(s)
+- name: start gitlab-ci runner
   hosts: tag_gitlab-ci-host
   become: true
   vars:
@@ -40,7 +40,6 @@
         state: started
         restart: yes
         restart_policy: always
-      tags: run
 
     - name: register runner
       raw: >

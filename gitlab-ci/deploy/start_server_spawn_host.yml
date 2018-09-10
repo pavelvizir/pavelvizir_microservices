@@ -89,3 +89,36 @@
         owner: docker-host-user
         group: docker-host-user
         mode: 0400
+
+    - name: create systemd linger dir
+      file:
+        state: directory
+        path: /var/lib/systemd/linger
+
+    - name: enable user linger
+      copy:
+        content: ""
+        dest: /var/lib/systemd/linger/docker-host-user
+        force: no
+        mode: 0600
+
+    - name: create systemd user service dir
+      become_user: docker-host-user
+      file:
+        state: directory
+        path: /home/docker-host-user/.config/systemd/user
+
+    - name: copy service.py
+      become_user: docker-host-user
+      copy:
+        src: server-spawn-service.service
+        dest: /home/docker-host-user/.config/systemd/user
+
+    - name: start service.py
+      become_user: docker-host-user
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        name: server-spawn-service.service
+        state: started
+        user: yes
