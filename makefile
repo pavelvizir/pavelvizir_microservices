@@ -21,10 +21,10 @@ build_%:				## Build images from % directory
 	  fi; \
 	   docker build -t $(USERNAME)/$* -f "$$project/Dockerfile" "$$project"; \
 	 else \
-	  echo "no dockerfile"; \
+	  echo "no dockerfile"; fail; \
 	 fi;  \
 	else \
-	  echo "no project"; \
+	  echo "no project"; fail; \
 	fi
 push_%:					## Push USERNAME/% image if it exists
 	@docker images "$(USERNAME)\/$*" --format "{{.Repository}}" | grep -i "$(USERNAME)\/$*" >/dev/null
