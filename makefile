@@ -12,9 +12,20 @@ help:					## This help.
 	@echo -e '\nVariables used:'
 	@cat $(cnf)
 build_%:				## Build images from % directory
-	@project=$$(find . -maxdepth 2 -type d -name $* || unset project); \
-	[ ! -z "$$project" ] && [ -f "$$project/Dockerfile" ]; \
-	docker build -t $(USERNAME)/$* -f "$$project/Dockerfile" "$$project"
+	@project=$$(find . -maxdepth 2 -type d -name $*); \
+	if [ ! -z "$$project" ]; then \
+	 if [ -f "$$project/Dockerfile" ]; then \
+	  if [ -f "$$project/docker_build.sh" ]; then \
+	   echo `git show --format="%h" HEAD | head -1` > "$$project/build_info.txt"; \
+	   echo `git rev-parse --abbrev-ref HEAD` >> "$$project/build_info.txt"; \
+	  fi; \
+	   docker build -t $(USERNAME)/$* -f "$$project/Dockerfile" "$$project"; \
+	 else \
+	  echo "no dockerfile"; \
+	 fi;  \
+	else \
+	  echo "no project"; \
+	fi
 push_%:					## Push USERNAME/% image if it exists
 	@docker images "$(USERNAME)\/$*" --format "{{.Repository}}" | grep -i "$(USERNAME)\/$*" >/dev/null
 	@docker push $(USERNAME)/$*
