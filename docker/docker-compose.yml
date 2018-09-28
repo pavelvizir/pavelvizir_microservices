@@ -15,12 +15,28 @@ services:
       - ${ui_port}:${ui_port}/tcp
     networks:
       - front_net
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: service.ui
+    environment:
+      - ZIPKIN_ENABLED=${ZIPKIN_ENABLED}
   post:
           # build: ./post-py
-    image: ${USERNAME}/post:${post_version}
+    image: ${USERNAME}/post-py:${post_version}
+    #        environment: #      - POST_DATABASE_HOST=post_db #      - POST_DATABASE=posts #    depends_on: #      - post_db #    ports:
+    #      - "5000:5000"
     networks:
       - front_net
       - back_net
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: service.post
+    environment:
+      - ZIPKIN_ENABLED=${ZIPKIN_ENABLED}
   comment:
           #     build:
           # context: ./comment
@@ -29,6 +45,8 @@ services:
     networks:
       - front_net
       - back_net
+    environment:
+      - ZIPKIN_ENABLED=${ZIPKIN_ENABLED}
 
 volumes:
   post_db:

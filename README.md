@@ -14,6 +14,7 @@ pavelvizir microservices repository
 - [Homework-17 aka 'gitlab-ci-2'](#homework-17-aka-gitlab-ci-2)  
 - [Homework-18 aka 'monitoring-1'](#homework-18-aka-monitoring-1)  
 - [Homework-19 aka 'monitoring-2'](#homework-19-aka-monitoring-2)  
+- [Homework-20 aka 'logging-1'](#homework-20-aka-logging-1)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -532,3 +533,7 @@ docker-compose -f docker-compose-monitoring.yml up -d
 
 firefox http://$(docker-maching ip docker-host):3000
 ```
+
+## Homework-20 aka 'logging-1'  
+### Task \#1:  
+#### Practice with docker. Print `docker images`.  

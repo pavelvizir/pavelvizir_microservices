@@ -1,0 +1,26 @@
+FROM alpine:3.7
+ENV APP_HOME /app
+RUN mkdir $APP_HOME
+WORKDIR $APP_HOME
+COPY Gemfile* $APP_HOME/
+RUN apk --update add --no-cache \
+    ruby \
+    ruby-dev \
+    ruby-bundler \
+    build-base \
+    && bundle install \
+    && apk del \
+    ruby-bundler \
+    build-base \
+    ruby-dev \
+    && rm -rf /usr/lib/ruby/gems/*/cache/* \
+        /var/cache/apk/* \
+        /tmp/* \
+        /var/tmp/*
+
+COPY . $APP_HOME
+
+ENV COMMENT_DATABASE_HOST comment_db
+ENV COMMENT_DATABASE comments
+
+CMD ["puma"]
