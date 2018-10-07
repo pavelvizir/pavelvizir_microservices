@@ -7,13 +7,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: post
+      app: post-py
   template:
     metadata:
-      name: post
+      name: post-py
       labels:
-        app: post
+        app: post-py
     spec:
       containers:
-      - image: chromko/post
-        name: post
+      - image: pavelvizir/post-py
+        name: post-py

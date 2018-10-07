@@ -15,6 +15,7 @@ pavelvizir microservices repository
 - [Homework-18 aka 'monitoring-1'](#homework-18-aka-monitoring-1)  
 - [Homework-19 aka 'monitoring-2'](#homework-19-aka-monitoring-2)  
 - [Homework-20 aka 'logging-1'](#homework-20-aka-logging-1)  
+- [Homework-21 aka 'kubernetes-1'](#homework-21-aka-kubernetes-1)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -573,3 +574,29 @@ docker-compose up -d
 firefox http://$(docker-machine ip logging):5601
 firefox http://$(docker-machine ip logging):9411
 ```
+
+## Homework-21 aka 'kubernetes-1'  
+### Task \#1:  
+#### Kubernetes the Hard Way.  
+Create deployment configs for `ui`, `comment`, `post-py`, `mongo`.  
+
+Complete https://github.com/kelseyhightower/kubernetes-the-hard-way  
+
+Just before the last step "Cleaning up" test reddit deployment creation:  
+```sh
+kubectl apply -f mongo-deployment.yml
+kubectl apply -f post-deployment.yml
+kubectl apply -f ui-deployment.yml
+kubectl apply -f comment-deployment.yml
+kubectl get pods 
+### NAME                                  READY   STATUS    RESTARTS   AGE
+### busybox-bd8fb7cbd-g9hrt               1/1     Running   1          69m
+### comment-deployment-6dcbf5cbf5-7q4rj   1/1     Running   0          2m
+### mongo-deployment-78fd9f6c74-vzrpl     1/1     Running   0          17m
+### nginx-dbddb74b8-p548d                 1/1     Running   0          42m
+### post-deployment-8ff86549-j7b7p        1/1     Running   0          16m
+### ui-deployment-75dd97656f-v79cb        1/1     Running   0          16m
+### untrusted                             1/1     Running   0          33m
+```
+
+Then remove the cluster.  
