@@ -16,6 +16,7 @@ pavelvizir microservices repository
 - [Homework-19 aka 'monitoring-2'](#homework-19-aka-monitoring-2)  
 - [Homework-20 aka 'logging-1'](#homework-20-aka-logging-1)  
 - [Homework-21 aka 'kubernetes-1'](#homework-21-aka-kubernetes-1)  
+- [Homework-22 aka 'kubernetes-2'](#homework-22-aka-kubernetes-2)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -600,3 +601,30 @@ kubectl get pods
 ```
 
 Then remove the cluster.  
+
+## Homework-22 aka 'kubernetes-2'  
+### Task \#1:  
+#### Create minikube cluster and start reddit there.  
+
+```sh
+minikube start
+cd kubernetes/reddit
+kubectl apply -f dev-namespace.yml
+kubectl apply -n dev -f ./
+# minikube delete
+```
+
+> Valuable command: `kubectl --validate=true --dry-run=true -f \<filename\>`
+
+### Task \#2:  
+#### Create GKE cluster and start reddit there.  
+
+Same as minikube :-)
+
+### Task \#3:
+#### Connect to GKE dashboard.
+
+```sh
+kubectl create clusterrolebinding kubernetes-dashboard  --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
+kubectl proxy
+```
