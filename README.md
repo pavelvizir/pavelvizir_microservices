@@ -17,6 +17,7 @@ pavelvizir microservices repository
 - [Homework-20 aka 'logging-1'](#homework-20-aka-logging-1)  
 - [Homework-21 aka 'kubernetes-1'](#homework-21-aka-kubernetes-1)  
 - [Homework-22 aka 'kubernetes-2'](#homework-22-aka-kubernetes-2)  
+- [Homework-23 aka 'kubernetes-3'](#homework-23-aka-kubernetes-3)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -627,4 +628,26 @@ Same as minikube :-)
 ```sh
 kubectl create clusterrolebinding kubernetes-dashboard  --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
 kubectl proxy
+```
+
+## Homework-23 aka 'kubernetes-3'  
+### Task \#1:  
+#### Practice with kubernetes.  
+
+ * Kube-dns
+ * Services (nodePort, LoadBalancer)
+ * TLS, secret
+ * NetworkPolicy
+ * Volume, PersistentVolume, PersistentVolumeClaim
+ * StorageClass
+
+```sh
+kubectl get secret ui-ingress -o yaml -n dev > secret.yml
+vim secret.yml
+```
+
+```sh
+cd kubernetes/reddit
+kubectl apply -f dev-namespace.yml
+kubectl apply -n dev -f ./
 ```
