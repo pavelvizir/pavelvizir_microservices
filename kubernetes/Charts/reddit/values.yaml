@@ -1,0 +1,21 @@
+comment:
+  image:
+    repository: pavelvizir/comment
+    tag: latest
+  service:
+    externalPort: 9292
+
+post:
+  image:
+    repository: pavelvizir/post
+    tag: latest
+    service:
+      externalPort: 5000
+
+ui:
+  image:
+    repository: pavelvizir/ui
+    tag: latest
+    service:
+      externalPort: 9292
+
