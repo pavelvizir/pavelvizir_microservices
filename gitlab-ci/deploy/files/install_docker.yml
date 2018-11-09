@@ -1,6 +1,6 @@
 ---
 - name: Install Docker CE
-  hosts: tag_gitlab-ci-host
+  hosts: all
   become: true
   tasks:
     - name: Add Docker GPG key

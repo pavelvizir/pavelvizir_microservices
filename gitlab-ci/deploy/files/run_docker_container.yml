@@ -1,0 +1,24 @@
+---
+- name: Run docker container
+  hosts: all
+  become: true
+  tasks:
+    - name: State Docker daemon
+      service:
+        name: docker
+        state: started
+
+    - name: Pull image
+      docker_image:
+        name: nginxdemos/hello
+        state: present
+
+    - name: Run container
+      docker_container:
+        name: hello
+        image: nginxdemos/hello
+        detach: yes
+        network_mode: host
+        ports:
+          - "80:80"
+        state: started

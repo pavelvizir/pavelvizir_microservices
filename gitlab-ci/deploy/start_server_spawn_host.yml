@@ -1,0 +1,124 @@
+---
+- name: prepare server-spawn-host
+  hosts: tag_gitlab-ci-server-spawn-host
+  become: true
+  tasks:
+    - name: install packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - unzip
+        - python-pip
+
+    - name: install python packages
+      pip:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - ansible
+        - flask
+        - apache-libcloud
+        - pycrypto
+
+    - name: install terraform
+      unarchive:
+        src: https://releases.hashicorp.com/terraform/0.11.7/terraform_0.11.7_linux_amd64.zip
+        dest: /usr/bin
+        remote_src: yes
+
+    - name: create working dir
+      file:
+        state: directory
+        path: /srv/server-spawn
+
+    - name: copy project.json
+      copy:
+        src: ../../../../key/project.json
+        dest: /srv/server-spawn
+
+    - name: copy project_name.tfvars
+      copy:
+        src: ../../../../key/project_name.tfvars
+        dest: /srv/server-spawn
+
+    - name: copy private key
+      copy:
+        src: ../../../../key/docker-host-user
+        dest: /srv/server-spawn
+
+    - name: copy public key
+      copy:
+        src: ../../../../key/docker-host-user.pub
+        dest: /srv/server-spawn
+
+    - name: copy secrets.py
+      copy:
+        src: ../../../../key/secrets.py
+        dest: /srv/server-spawn
+
+    - name: copy service.py
+      copy:
+        src: service.py
+        dest: /srv/server-spawn
+
+    - name: copy files dir
+      copy:
+        src: files
+        dest: /srv/server-spawn
+
+    - name: get gce.py
+      get_url:
+        url: 'https://raw.githubusercontent.com/ansible/ansible/devel/contrib/inventory/gce.{{ item }}'
+        dest: /srv/server-spawn
+      loop:
+        - ini
+        - py
+
+    - name: set file permissions
+      file:
+        dest: /srv/server-spawn
+        owner: docker-host-user
+        group: docker-host-user
+        mode: 0775
+        recurse: yes
+
+    - name: set damn ssh key permissions FFS
+      file:
+        dest: /srv/server-spawn/docker-host-user
+        owner: docker-host-user
+        group: docker-host-user
+        mode: 0400
+
+    - name: create systemd linger dir
+      file:
+        state: directory
+        path: /var/lib/systemd/linger
+
+    - name: enable user linger
+      copy:
+        content: ""
+        dest: /var/lib/systemd/linger/docker-host-user
+        force: no
+        mode: 0600
+
+    - name: create systemd user service dir
+      become_user: docker-host-user
+      file:
+        state: directory
+        path: /home/docker-host-user/.config/systemd/user
+
+    - name: copy service.py
+      become_user: docker-host-user
+      copy:
+        src: server-spawn-service.service
+        dest: /home/docker-host-user/.config/systemd/user
+
+    - name: start service.py
+      become_user: docker-host-user
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        name: server-spawn-service.service
+        state: started
+        user: yes

@@ -1,6 +1,6 @@
 ---
 - name: Start gitlab-ci omnibus
-  hosts: all
+  hosts: tag_gitlab-ci-host
   become: true
   tasks:
     - name: Start Docker daemon

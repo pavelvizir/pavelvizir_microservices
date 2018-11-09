@@ -9,6 +9,7 @@ pavelvizir microservices repository
 - [Homework-14 aka 'docker-3'](#homework-14-aka-docker-3)  
 - [Homework-15 aka 'docker-4'](#homework-15-aka-docker-4)  
 - [Homework-16 aka 'gitlab-ci-1'](#homework-16-aka-gitlab-ci-1)  
+- [Homework-17 aka 'gitlab-ci-2'](#homework-17-aka-gitlab-ci-2)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -377,4 +378,33 @@ ansible-playbook start_gitlab-ci.yml
 
 *Gitlab-ci* project settings -> integrations -> slack notifications -> active, add webhook url, process to slack webhook link, test results  
 *Slack* Enable webhook, enjoy integration  
+
+## Homework-17 aka 'gitlab-ci-2'  
+### Task \#1\*:  
+#### New server should be created with new branch push.  
+
+> Haven't completed this task. Almost done, but it requires DNS-control to work flawlessly.  
+> Would require adding curl commands to .gitlab-ci.yml...  
+
+Created simple python [Flask](http://flask.pocoo.org/) application with simple API. Passing POST parameter 'name' creates server with that name and deploys needed `docker` container.
+
+How it works:
+ 1. `terraform` creates 'gitlab-ci-server-spawn-host' with [server_spawn_host.tf](https://github.com/Otus-DevOps-2018-05/pavelvizir_microservices/blob/gitlab-ci-2/gitlab-ci/deploy/server_spawn_host.tf)  
+ 2. `ansible` prepares 'gitlab-ci-server-spawn-host' with [start_server_spawn_host.yml](https://github.com/Otus-DevOps-2018-05/pavelvizir_microservices/blob/gitlab-ci-2/gitlab-ci/deploy/start_server_spawn_host.yml):  
+   - install `terraform` and `ansible`  
+   - copy all the ssh keys and project.json  
+   - start systemd user [service](https://github.com/Otus-DevOps-2018-05/pavelvizir_microservices/blob/gitlab-ci-2/gitlab-ci/deploy/service.py) with python Flask [application](https://github.com/Otus-DevOps-2018-05/pavelvizir_microservices/blob/gitlab-ci-2/gitlab-ci/deploy/server-spawn-service.service)  
+ 3. `curl` from .gitlab-ci.yml [creates](http://35.241.213.116:9999/create) or [destroys](http://35.241.213.116:9999/destroy) server for each branch.  
+   - Complete `terraform` and `ansible` output returns with reply from Flask application.  
+ 4. Server for branch is created and docker container started:
+   - For now it's [nginxdemos/hello](https://github.com/Otus-DevOps-2018-05/pavelvizir_microservices/blob/gitlab-ci-2/gitlab-ci/deploy/files/run_docker_container.yml) on port 80.
+   - In future it should be container with application `reddit` from branch. 
+
+```sh
+terraform apply -var project=docker-xxxxxx
+ansible-playbook base.yml --limit=gitlab-ci-server-spawn-host
+ansible-playbook start_server_spawn_host.yml
+curl -d 'name=branch_12345' -X POST http://35.241.213.116:9999/create
+curl -d 'name=branch_12345' -X POST http://35.241.213.116:9999/destroy
+```
 
