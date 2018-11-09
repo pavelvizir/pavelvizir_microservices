@@ -13,6 +13,7 @@ pavelvizir microservices repository
 - [Homework-16 aka 'gitlab-ci-1'](#homework-16-aka-gitlab-ci-1)  
 - [Homework-17 aka 'gitlab-ci-2'](#homework-17-aka-gitlab-ci-2)  
 - [Homework-18 aka 'monitoring-1'](#homework-18-aka-monitoring-1)  
+- [Homework-19 aka 'monitoring-2'](#homework-19-aka-monitoring-2)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -498,12 +499,36 @@ build_%:				## Build images from % directory
 	  fi; \
 	   docker build -t $(USERNAME)/$* -f "$$project/Dockerfile" "$$project"; \
 	 else \
-	  echo "no dockerfile"; \
+	  echo "no dockerfile"; false; \
 	 fi;  \
 	else \
-	  echo "no project"; \
+	  echo "no project"; false; \
 	fi
 push_%:					## Push USERNAME/% image if it exists
 	@docker images "$(USERNAME)\/$*" --format "{{.Repository}}" | grep -i "$(USERNAME)\/$*" >/dev/null
 	@docker push $(USERNAME)/$*
+```
+
+## Homework-19 aka 'monitoring-2'  
+### Task \#1:  
+#### Practice with cAdvisor, Grafana, Alertmanager.  
+
+```sh
+gcloud compute firewall-rules create prometheus-default --allow tcp:9090
+gcloud compute firewall-rules create puma-default --allow tcp:9292
+gcloud compute firewall-rules create cadvisor-default --allow tcp:8080
+gcloud compute firewall-rules create grafana-default --allow tcp:3000
+gcloud compute firewall-rules create alertmanager-default --allow tcp:9093
+export GOOGLE_PROJECT=docker-xxxxxx
+docker-machine create --driver google \
+    --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+    --google-machine-type n1-standard-1 \
+    --google-zone europe-west1-b \
+    docker-host
+eval $(docker-machine env docker-host)
+make build
+cd docker & docker-compose up -d
+docker-compose -f docker-compose-monitoring.yml up -d
+
+firefox http://$(docker-maching ip docker-host):3000
 ```
