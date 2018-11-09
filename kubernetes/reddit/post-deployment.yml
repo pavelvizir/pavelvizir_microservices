@@ -1,0 +1,19 @@
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: post-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: post-py
+  template:
+    metadata:
+      name: post-py
+      labels:
+        app: post-py
+    spec:
+      containers:
+      - image: pavelvizir/post-py
+        name: post-py
