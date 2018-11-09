@@ -14,10 +14,29 @@ pavelvizir microservices repository
 - [Homework-17 aka 'gitlab-ci-2'](#homework-17-aka-gitlab-ci-2)  
 - [Homework-18 aka 'monitoring-1'](#homework-18-aka-monitoring-1)  
 - [Homework-19 aka 'monitoring-2'](#homework-19-aka-monitoring-2)  
+- [Homework-20 aka 'logging-1'](#homework-20-aka-logging-1)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
-#### Practice with docker. Print `docker images`.  
+#### Practice with EFK, zipkin.
+
+```sh
+export GOOGLE_PROJECT=docker-xxxxxx
+docker-machine create --driver google \
+    --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+    --google-machine-type n1-standard-1 \
+    --google-open-port 5601/tcp \
+    --google-open-port 9292/tcp \
+    --google-open-port 9411/tcp \
+    logging
+eval $(docker-machine env logging)
+for i in ui post-py comment; do cd src/$i; bash docker_build.sh && docker push pavelvizir/$i; cd -; done
+export USER_NAME=pavelvizir
+docker-compose -f docker-compose-logging.yml up -d
+docker-compose up -d
+
+firefox http://$(docker-machine ip logging):5601
+firefox http://$(docker-machine ip logging):9411
 
 ```sh
 docker images | head -2
@@ -531,4 +550,26 @@ cd docker & docker-compose up -d
 docker-compose -f docker-compose-monitoring.yml up -d
 
 firefox http://$(docker-maching ip docker-host):3000
+```
+
+## Homework-20 aka 'logging-1'  
+### Task \#1:  
+#### Practice EFK, zipkin.
+
+```sh
+export GOOGLE_PROJECT=docker-xxxxxx
+docker-machine create --driver google \
+    --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+    --google-machine-type n1-standard-1 \
+    --google-open-port 5601/tcp \
+    --google-open-port 9292/tcp \
+    --google-open-port 9411/tcp \
+    logging
+eval $(docker-machine env logging)
+export USER_NAME=pavelvizir
+for i in ui post-py comment; do cd src/$i; bash docker_build.sh && docker push pavelvizir/$i; cd -; done
+docker-compose -f docker-compose-logging.yml up -d
+docker-compose up -d
+firefox http://$(docker-machine ip logging):5601
+firefox http://$(docker-machine ip logging):9411
 ```
