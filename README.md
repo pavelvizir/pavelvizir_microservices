@@ -18,6 +18,7 @@ pavelvizir microservices repository
 - [Homework-21 aka 'kubernetes-1'](#homework-21-aka-kubernetes-1)  
 - [Homework-22 aka 'kubernetes-2'](#homework-22-aka-kubernetes-2)  
 - [Homework-23 aka 'kubernetes-3'](#homework-23-aka-kubernetes-3)  
+- [Homework-24 aka 'kubernetes-4'](#homework-24-aka-kubernetes-4)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -650,4 +651,28 @@ vim secret.yml
 cd kubernetes/reddit
 kubectl apply -f dev-namespace.yml
 kubectl apply -n dev -f ./
+```
+
+## Homework-24 aka 'kubernetes-4'  
+### Task \#1:  
+#### Practice with helm.
+
+```sh
+kubectl apply -f tiller.yml
+helm init --service-account tiller
+helm install reddit --name reddit-test
+helm ls
+helm delete --purge reddit-test
+```
+
+### Task \#2:
+#### Practice with CI/CD in Kubernetes with Gitlab-CI.
+
+```sh
+helm repo add gitlab https://charts.gitlab.io
+helm fetch gitlab/gitlab-omnibus --version 0.1.37 --untar
+# make changes to configs
+cd gitlab-omnibus && helm install --name gitlab . -f values.yaml
+# prepare pipeline, add lines to /etc/hosts
+firefox http://<your_branches_names>
 ```
