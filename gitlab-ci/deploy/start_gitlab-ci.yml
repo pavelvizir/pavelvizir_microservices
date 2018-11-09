@@ -1,0 +1,28 @@
+---
+- name: Start gitlab-ci omnibus
+  hosts: all
+  become: true
+  tasks:
+    - name: Start Docker daemon
+      service:
+        name: docker
+        state: started
+
+    - name: Create directory structure
+      file:
+        state: directory
+        path: '/srv/gitlab/{{ item }}'
+      loop:
+        - config
+        - data
+        - logs
+
+    - name: Config omnibus compose
+      template:
+        src: docker-compose.j2
+        dest: '/srv/gitlab/docker-compose.yml'
+      
+    - name: Start gitlab-ci
+      docker_service:
+        project_src: '/srv/gitlab'
+        state: present
