@@ -3,6 +3,8 @@ pavelvizir microservices repository
 
 [![Build Status](https://travis-ci.com/Otus-DevOps-2018-05/pavelvizir_microservices.svg?branch=master)](https://travis-ci.com/Otus-DevOps-2018-05/pavelvizir_microservices)
 
+[Link to docker hub](https://hub.docker.com/r/pavelvizir)
+
 # Table of contents:  
 - [Homework-12 aka 'docker-1'](#homework-12-aka-docker-1)  
 - [Homework-13 aka 'docker-2'](#homework-13-aka-docker-2)  
@@ -10,6 +12,7 @@ pavelvizir microservices repository
 - [Homework-15 aka 'docker-4'](#homework-15-aka-docker-4)  
 - [Homework-16 aka 'gitlab-ci-1'](#homework-16-aka-gitlab-ci-1)  
 - [Homework-17 aka 'gitlab-ci-2'](#homework-17-aka-gitlab-ci-2)  
+- [Homework-18 aka 'monitoring-1'](#homework-18-aka-monitoring-1)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -408,3 +411,99 @@ curl -d 'name=branch_12345' -X POST http://35.241.213.116:9999/create
 curl -d 'name=branch_12345' -X POST http://35.241.213.116:9999/destroy
 ```
 
+## Homework-18 aka 'monitoring-1'  
+### Task \#1\*:  
+#### Add blackbox_exporter monitoring  
+
+ 1. Add blackbox.yml config:  
+```yaml
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      method: GET
+      fail_if_not_matches_regexp:
+        - "All posts"
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
+```
+ 2. Add blackbox config to prometheus.yml:  
+```yaml
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://ui:9292
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox_exporter:9115
+  - job_name: 'blackbox-tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+        - post:5000
+        - comment:9292
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox_exporter:9115
+```
+ 3. Add Dockerfile to build blackbox_exporter with config  
+ 4. Add blackbox_exporter to docker-compose.yml
+
+### Task \#2\*:  
+#### Create makefile to build and push images
+
+makefile.config:
+```
+USERNAME=username
+PROJECTS=ui comment post-py prometheus blackbox_exporter
+```
+
+makefile:
+```make
+.DEFAULT_GOAL := help
+.PHONY: build push all help
+cnf ?= makefile.config
+include $(cnf)
+BUILD_LIST = $(addprefix build_,$(PROJECTS))
+PUSH_LIST = $(addprefix push_,$(PROJECTS))
+build:  $(BUILD_LIST)			## Build all PROJECTS 
+push:   $(PUSH_LIST)			## Push all PROJECTS 
+all:	$(BUILD_LIST) $(PUSH_LIST)	## Build and push PROJECTS
+help:					## This help.
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+\%?:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo -e '\nVariables used:'
+	@cat $(cnf)
+build_%:				## Build images from % directory
+	@project=$$(find . -maxdepth 2 -type d -name $*); \
+	if [ ! -z "$$project" ]; then \
+	 if [ -f "$$project/Dockerfile" ]; then \
+	  if [ -f "$$project/docker_build.sh" ]; then \
+	   echo `git show --format="%h" HEAD | head -1` > "$$project/build_info.txt"; \
+	   echo `git rev-parse --abbrev-ref HEAD` >> "$$project/build_info.txt"; \
+	  fi; \
+	   docker build -t $(USERNAME)/$* -f "$$project/Dockerfile" "$$project"; \
+	 else \
+	  echo "no dockerfile"; \
+	 fi;  \
+	else \
+	  echo "no project"; \
+	fi
+push_%:					## Push USERNAME/% image if it exists
+	@docker images "$(USERNAME)\/$*" --format "{{.Repository}}" | grep -i "$(USERNAME)\/$*" >/dev/null
+	@docker push $(USERNAME)/$*
+```
