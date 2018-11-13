@@ -724,7 +724,7 @@ helm upgrade prom ./prometheus -f prometheus/custom_values.yml --install
 ui_request_count ->
 ui_request_count{kubernetes_namespace=~"$namespace"}
 
-### Task \$4:  
+### Task \#4:  
 #### Start EFK  
 
 ```sh
