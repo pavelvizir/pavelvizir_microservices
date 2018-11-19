@@ -1,0 +1,10 @@
+---
+service:
+  internalPort: 5000
+  externalPort: 5000
+
+image:
+  repository: pavelvizir/post-py
+  tag: latest
+
+databaseHost:
