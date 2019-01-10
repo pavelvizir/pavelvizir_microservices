@@ -19,6 +19,7 @@ pavelvizir microservices repository
 - [Homework-22 aka 'kubernetes-2'](#homework-22-aka-kubernetes-2)  
 - [Homework-23 aka 'kubernetes-3'](#homework-23-aka-kubernetes-3)  
 - [Homework-24 aka 'kubernetes-4'](#homework-24-aka-kubernetes-4)  
+- [Homework-25 aka 'kubernetes-5'](#homework-25-aka-kubernetes-5)  
 
 ## Homework-12 aka 'docker-1'  
 ### Task \#1:  
@@ -675,4 +676,67 @@ helm fetch gitlab/gitlab-omnibus --version 0.1.37 --untar
 cd gitlab-omnibus && helm install --name gitlab . -f values.yaml
 # prepare pipeline, add lines to /etc/hosts
 firefox http://<your_branches_names>
+```
+
+## Homework-25 aka 'kubernetes-5'  
+### Task \#1:  
+#### Install Prometheus, configure node-exporter  
+
+```sh
+helm install stable/nginx-ingress --name nginx
+kubectl get svc
+echo '1.2.3.4 reddit reddit-prometheus reddit-grafana reddit-non-prod production reddit-kibana staging prod' | sudo tee -a /etc/hosts
+cd kubernetes/charts && helm fetch --untar stable/prometheus
+cd prometheus
+helm upgrade prom . -f custom_values.yml --install
+firefox http://reddit-prometheus
+vim custom_values.yaml
+# nodeExporter:
+#   enabled: true
+helm upgrade prom ./prometheus -f prometheus/custom_values.yml --install
+```
+
+### Task \#2:  
+#### Separate 'reddit-endpoints' config into 3 jobs  
+
+> Example with ui:  
+```yaml
+      - job_name: 'ui-endpoints'
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_service_label_(.+)
+          - source_labels: [__meta_kubernetes_service_label_app, __meta_kubernetes_service_label_component]
+            action: keep
+            regex: reddit;ui
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: kubernetes_name
+```
+
+### Task \#3:  
+#### Change grafana's previous dashboards to use templating  
+
+> Example with UI_Service_Monitoring "UI HTTP Requests"  
+
+ui_request_count ->
+ui_request_count{kubernetes_namespace=~"$namespace"}
+
+### Task \#4:  
+#### Start EFK  
+
+```sh
+kubectl label node gke-unbroken-default-pool-7220c9cd-j5fp elastichost=true
+mkdir efk && cd efk
+# wget multiple *.yaml
+kubectl apply -f ./efk
+helm upgrade --install kibana stable/kibana \
+--set "ingress.enabled=true" \
+--set "ingress.hosts={reddit-kibana}" \
+--set "env.ELASTICSEARCH_URL=http://elasticsearch-logging:9200" \
+--version 0.1.1
+# wait for kibana to start, create index
+firefox http://reddit-kibana
 ```
